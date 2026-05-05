@@ -15,7 +15,7 @@ if not TOKEN:
     raise ValueError("TOKEN tidak ditemukan!")
 
 # =========================
-# GENERATE KODE RANDOM
+# GENERATE KODE
 # =========================
 def generate_kode(length=8):
     return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
@@ -34,7 +34,7 @@ async def cek_join(user_id, bot):
         return False
 
 # =========================
-# COMMAND /buatlink
+# BUAT LINK
 # =========================
 async def buatlink(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
@@ -59,7 +59,7 @@ async def kirim_video(chat_id, video, context):
         await context.bot.send_video(
             chat_id=chat_id,
             video=open(video, "rb"),
-            caption="🔥 Nih videonya bro"
+            caption="🔥 Nih videonya bro 😏"
         )
     except:
         await context.bot.send_message(chat_id, "❌ Video tidak ditemukan")
@@ -69,6 +69,7 @@ async def kirim_video(chat_id, video, context):
 # =========================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
+    nama = update.effective_user.first_name
     args = context.args
 
     kode = args[0] if args else None
@@ -76,16 +77,20 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await cek_join(user_id, context.bot):
         keyboard = [
             [
-                InlineKeyboardButton("📢 Join Channel", url=f"https://t.me/{CHANNEL.replace('@','')}"),
-                InlineKeyboardButton("👥 Join Group", url=f"https://t.me/{GROUP.replace('@','')}")
+                InlineKeyboardButton("Join Dulu", url=f"https://t.me/{CHANNEL.replace('@','')}")
             ],
             [
-                InlineKeyboardButton("✅ Sudah Join", callback_data="cek")
+                InlineKeyboardButton("Join Dulu", url=f"https://t.me/{GROUP.replace('@','')}")
+            ],
+            [
+                InlineKeyboardButton("🔄 Coba Lagi", callback_data="cek")
             ]
         ]
 
         await update.message.reply_text(
-            "⚠️ Join dulu bro 👇",
+            f"Hello {nama}\n\n"
+            "Anda harus bergabung di Channel/Grup saya terlebih dahulu untuk melihat file yang saya bagikan.\n\n"
+            "Silakan Join ke Channel & Group terlebih dahulu 👇",
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
         return
@@ -125,7 +130,7 @@ async def tombol(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.answer("❌ Kamu belum join!", show_alert=True)
 
 # =========================
-# RUN BOT
+# RUN
 # =========================
 app = ApplicationBuilder().token(TOKEN).build()
 
