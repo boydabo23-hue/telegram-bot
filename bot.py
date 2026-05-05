@@ -9,7 +9,7 @@ TOKEN = os.getenv("TOKEN")
 CHANNEL = "@NutrisiViral18"
 GROUP = "@bpoindo"
 
-USERNAME_BOT = "@veronicasexbot"
+USERNAME_BOT = "veronicasexbot"
 
 if not TOKEN:
     raise ValueError("TOKEN tidak ditemukan!")
