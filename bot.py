@@ -2,9 +2,8 @@ import os
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-API_ID = int(os.getenv("27434334"))
-API_HASH = os.getenv("b2a69a373c1e4093f7c7ae958e013ab6
-")
+API_ID = int(os.getenv("API_ID"))
+API_HASH = os.getenv("API_HASH")
 BOT_TOKEN = os.getenv("8577228984:AAH8pi61W5pp7LEQiM9hiPHfogQotXbqzUo")
 
 CHANNEL = os.getenv("@NutrisiViral18")  # tanpa @
