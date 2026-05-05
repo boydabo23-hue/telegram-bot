@@ -1,56 +1,51 @@
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
+import os
+from pyrogram import Client, filters
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-TOKEN = "8577228984:AAH8pi61W5pp7LEQiM9hiPHfogQotXbqzUo"
-CHANNEL = "@NutrisiViral18"
-GROUP = "@bpoindo"
+API_ID = int(os.getenv("API_ID"))
+API_HASH = os.getenv("API_HASH")
+BOT_TOKEN = os.getenv("8577228984:AAH8pi61W5pp7LEQiM9hiPHfogQotXbqzUo")
 
-async def cek_join(user_id, bot):
+CHANNEL = os.getenv("@NutrisiViral18")  # tanpa @
+GROUP = os.getenv("@bpoindo")      # tanpa @
+
+app = Client("bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+
+async def is_joined(client, user_id):
     try:
-        ch = await bot.get_chat_member(CHANNEL, user_id)
-        gr = await bot.get_chat_member(GROUP, user_id)
-
-        return ch.status in ["member", "administrator", "creator"] and \
-               gr.status in ["member", "administrator", "creator"]
+        await client.get_chat_member(CHANNEL, user_id)
+        await client.get_chat_member(GROUP, user_id)
+        return True
     except:
         return False
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
+@app.on_message(filters.command("start"))
+async def start(client, message):
+    user = message.from_user
 
-    if not await cek_join(user_id, context.bot):
-        keyboard = [
-            [
-                InlineKeyboardButton("📢 Join Channel", url=f"https://t.me/{CHANNEL.replace('@','')}"),
-                InlineKeyboardButton("👥 Join Group", url=f"https://t.me/{GROUP.replace('@','')}")
-            ],
-            [
-                InlineKeyboardButton("🔄 Coba Lagi", callback_data="cek")
-            ]
-        ]
+    if not await is_joined(client, user.id):
+        buttons = InlineKeyboardMarkup([
+            [InlineKeyboardButton("Join Channel", url=f"https://t.me/{CHANNEL}")],
+            [InlineKeyboardButton("Join Group", url=f"https://t.me/{GROUP}")],
+            [InlineKeyboardButton("Coba Lagi", callback_data="cek")]
+        ])
 
-        await update.message.reply_text(
-            "⚠️ Anda harus join dulu ya!\n\nKlik tombol di bawah 👇",
-            reply_markup=InlineKeyboardMarkup(keyboard)
+        await message.reply_text(
+            f"Halo {user.mention}\n\n"
+            "Silakan join channel & group dulu ya.",
+            reply_markup=buttons
         )
+        return
+
+    await message.reply_text("✅ Kamu sudah join! Akses diterima.")
+
+@app.on_callback_query(filters.regex("cek"))
+async def cek(client, callback_query):
+    user = callback_query.from_user
+
+    if await is_joined(client, user.id):
+        await callback_query.message.edit_text("✅ Sudah join! Akses diterima.")
     else:
-        await update.message.reply_text("✅ Akses berhasil! Welcome 🎉")
+        await callback_query.answer("Kamu belum join!", show_alert=True)
 
-async def tombol(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-
-    user_id = query.from_user.id
-
-    if await cek_join(user_id, context.bot):
-        await query.edit_message_text("✅ Berhasil! Kamu sudah join 🎉")
-    else:
-        await query.answer("❌ Kamu belum join!", show_alert=True)
-
-app = ApplicationBuilder().token(TOKEN).build()
-
-app.add_handler(CommandHandler("start", start))
-app.add_handler(CallbackQueryHandler(tombol))
-
-print("Bot aktif...")
-app.run_polling()
+app.run()
