@@ -1,21 +1,28 @@
 import os
+import random
+import string
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
-# ambil token dari Railway
 TOKEN = os.getenv("TOKEN")
 
-# ganti sesuai punyamu
 CHANNEL = "@NutrisiViral18"
 GROUP = "@bpoindo"
 
-# nama file HARUS ada di repo GitHub kamu
-FILE_NAME = "file.pdf"
+USERNAME_BOT = "@veronicasexbot"
 
 if not TOKEN:
-    raise ValueError("TOKEN tidak ditemukan di Railway!")
+    raise ValueError("TOKEN tidak ditemukan!")
 
-# cek apakah user sudah join
+# =========================
+# GENERATE KODE RANDOM
+# =========================
+def generate_kode(length=8):
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+
+# =========================
+# CEK JOIN
+# =========================
 async def cek_join(user_id, bot):
     try:
         ch = await bot.get_chat_member(CHANNEL, user_id)
@@ -26,9 +33,45 @@ async def cek_join(user_id, bot):
     except:
         return False
 
-# command /start
+# =========================
+# COMMAND /buatlink
+# =========================
+async def buatlink(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not context.args:
+        await update.message.reply_text("Contoh: /buatlink video1.mp4")
+        return
+
+    nama_video = context.args[0]
+    kode = generate_kode()
+
+    with open("links.txt", "a") as f:
+        f.write(f"{kode}|{nama_video}\n")
+
+    link = f"https://t.me/{USERNAME_BOT}?start={kode}"
+
+    await update.message.reply_text(f"🔗 Link kamu:\n{link}")
+
+# =========================
+# KIRIM VIDEO
+# =========================
+async def kirim_video(chat_id, video, context):
+    try:
+        await context.bot.send_video(
+            chat_id=chat_id,
+            video=open(video, "rb"),
+            caption="🔥 Nih videonya bro"
+        )
+    except:
+        await context.bot.send_message(chat_id, "❌ Video tidak ditemukan")
+
+# =========================
+# START
+# =========================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
+    args = context.args
+
+    kode = args[0] if args else None
 
     if not await cek_join(user_id, context.bot):
         keyboard = [
@@ -42,29 +85,34 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
 
         await update.message.reply_text(
-            "🔥 *HALO BRO!* 🔥\n\n"
-            "Untuk lanjut, kamu wajib join dulu ya 👇",
-            parse_mode="Markdown",
+            "⚠️ Join dulu bro 👇",
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
+        return
+
+    # kalau ada kode dari link
+    if kode:
+        try:
+            with open("links.txt", "r") as f:
+                data = f.readlines()
+
+            for line in data:
+                k, v = line.strip().split("|")
+                if k == kode:
+                    await kirim_video(user_id, v, context)
+                    return
+
+            await update.message.reply_text("❌ Link tidak valid")
+
+        except:
+            await update.message.reply_text("❌ Data belum ada")
+
     else:
-        await kirim_file(update.effective_chat.id, context)
+        await update.message.reply_text("Welcome bro 😎")
 
-# fungsi kirim file
-async def kirim_file(chat_id, context):
-    await context.bot.send_message(
-        chat_id=chat_id,
-        text="🔥 *AKSES DIBUKA!* 🔥\n\nIni konten kamu 👇",
-        parse_mode="Markdown"
-    )
-
-    await context.bot.send_document(
-        chat_id=chat_id,
-        document=open(FILE_NAME, "rb"),
-        caption="😏 Jangan disebar ya bro..."
-    )
-
-# tombol "Sudah Join"
+# =========================
+# TOMBOL CEK
+# =========================
 async def tombol(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -72,16 +120,17 @@ async def tombol(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = query.from_user.id
 
     if await cek_join(user_id, context.bot):
-        await query.edit_message_text("✅ Berhasil! Mengirim konten...")
-
-        await kirim_file(query.message.chat.id, context)
+        await query.edit_message_text("✅ Berhasil! Kirim ulang link ya")
     else:
-        await query.answer("❌ Kamu belum join semua!", show_alert=True)
+        await query.answer("❌ Kamu belum join!", show_alert=True)
 
-# run bot
+# =========================
+# RUN BOT
+# =========================
 app = ApplicationBuilder().token(TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
+app.add_handler(CommandHandler("buatlink", buatlink))
 app.add_handler(CallbackQueryHandler(tombol))
 
 print("Bot aktif...")
