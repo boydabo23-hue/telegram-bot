@@ -1,114 +1,88 @@
 import os
-from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
-# ====== WAJIB: Railway Variables ======
-API_ID = int(os.environ["API_ID"])
-API_HASH = os.environ["API_HASH"]
-BOT_TOKEN = os.environ["BOT_TOKEN"]
+# ambil token dari Railway
+TOKEN = os.getenv("TOKEN")
 
-# ====== OPSIONAL tapi disarankan: Railway Variables ======
-# Isi dengan username tanpa spasi. Boleh pakai @ atau tanpa @.
-# Contoh: CHANNEL=NutrisiViral18  |  GROUP=bpoindo
-CHANNEL = os.getenv("CHANNEL", "").strip()
-GROUP = os.getenv("GROUP", "").strip()
+# ganti sesuai punyamu
+CHANNEL = "@NutrisiViral18"
+GROUP = "@bpoindo"
 
+# nama file HARUS ada di repo GitHub kamu
+FILE_NAME = "file.pdf"
 
-def _norm_chat(x: str) -> str:
-    """Normalize username to @username, return empty string if not set."""
-    if not x:
-        return ""
-    return x if x.startswith("@") else f"@{x}"
+if not TOKEN:
+    raise ValueError("TOKEN tidak ditemukan di Railway!")
 
-
-CHANNEL = _norm_chat(CHANNEL)
-GROUP = _norm_chat(GROUP)
-
-app = Client("bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
-
-
-async def is_joined(client: Client, user_id: int) -> bool:
-    """
-    Cek apakah user sudah join CHANNEL dan GROUP (kalau di-set).
-    Kalau CHANNEL/GROUP kosong, yang kosong dianggap lolos.
-    """
+# cek apakah user sudah join
+async def cek_join(user_id, bot):
     try:
-        if CHANNEL:
-            await client.get_chat_member(CHANNEL, user_id)
-        if GROUP:
-            await client.get_chat_member(GROUP, user_id)
-        return True
-    except Exception:
+        ch = await bot.get_chat_member(CHANNEL, user_id)
+        gr = await bot.get_chat_member(GROUP, user_id)
+
+        return ch.status in ["member", "administrator", "creator"] and \
+               gr.status in ["member", "administrator", "creator"]
+    except:
         return False
 
+# command /start
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
 
-def join_keyboard() -> InlineKeyboardMarkup:
-    buttons = []
-    row = []
+    if not await cek_join(user_id, context.bot):
+        keyboard = [
+            [
+                InlineKeyboardButton("📢 Join Channel", url=f"https://t.me/{CHANNEL.replace('@','')}"),
+                InlineKeyboardButton("👥 Join Group", url=f"https://t.me/{GROUP.replace('@','')}")
+            ],
+            [
+                InlineKeyboardButton("✅ Sudah Join", callback_data="cek")
+            ]
+        ]
 
-    if CHANNEL:
-        row.append(InlineKeyboardButton("Join Channel", url=f"https://t.me/{CHANNEL.lstrip('@')}"))
-    if GROUP:
-        row.append(InlineKeyboardButton("Join Group", url=f"https://t.me/{GROUP.lstrip('@')}"))
-
-    if row:
-        buttons.append(row)
-
-    buttons.append([InlineKeyboardButton("✅ Sudah join", callback_data="check_join")])
-    return InlineKeyboardMarkup(buttons)
-
-
-WELCOME_TEXT = (
-    "Halo!\n\n"
-    "Untuk menggunakan bot ini, kamu harus join Channel & Group dulu."
-)
-
-OK_TEXT = (
-    "✅ Mantap! Kamu sudah join.\n\n"
-    "Sekarang kamu bisa pakai bot ini."
-)
-
-
-@app.on_message(filters.command("start") & filters.private)
-async def start_handler(client, message):
-    user_id = message.from_user.id
-
-    # Jika CHANNEL/GROUP belum diset, kasih info biar tidak bingung
-    if not CHANNEL and not GROUP:
-        await message.reply_text(
-            "Bot aktif ✅\n\n"
-            "Tapi ENV `CHANNEL` dan `GROUP` belum diisi.\n"
-            "Isi di Railway Variables kalau mau fitur wajib join."
+        await update.message.reply_text(
+            "🔥 *HALO BRO!* 🔥\n\n"
+            "Untuk lanjut, kamu wajib join dulu ya 👇",
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup(keyboard)
         )
-        return
-
-    if await is_joined(client, user_id):
-        await message.reply_text(OK_TEXT)
     else:
-        await message.reply_text(WELCOME_TEXT, reply_markup=join_keyboard())
+        await kirim_file(update.effective_chat.id, context)
 
+# fungsi kirim file
+async def kirim_file(chat_id, context):
+    await context.bot.send_message(
+        chat_id=chat_id,
+        text="🔥 *AKSES DIBUKA!* 🔥\n\nIni konten kamu 👇",
+        parse_mode="Markdown"
+    )
 
-@app.on_callback_query(filters.regex("^check_join$"))
-async def check_join_cb(client, callback_query):
-    user_id = callback_query.from_user.id
+    await context.bot.send_document(
+        chat_id=chat_id,
+        document=open(FILE_NAME, "rb"),
+        caption="😏 Jangan disebar ya bro..."
+    )
 
-    if await is_joined(client, user_id):
-        await callback_query.message.edit_text(OK_TEXT)
-        await callback_query.answer("Sudah join ✅", show_alert=False)
+# tombol "Sudah Join"
+async def tombol(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    user_id = query.from_user.id
+
+    if await cek_join(user_id, context.bot):
+        await query.edit_message_text("✅ Berhasil! Mengirim konten...")
+
+        await kirim_file(query.message.chat.id, context)
     else:
-        await callback_query.answer("Kamu belum join semua ya. Join dulu lalu klik lagi.", show_alert=True)
+        await query.answer("❌ Kamu belum join semua!", show_alert=True)
 
+# run bot
+app = ApplicationBuilder().token(TOKEN).build()
 
-# Contoh command lain (biar kelihatan bot jalan)
-@app.on_message(filters.command("ping") & filters.private)
-async def ping_handler(client, message):
-    user_id = message.from_user.id
+app.add_handler(CommandHandler("start", start))
+app.add_handler(CallbackQueryHandler(tombol))
 
-    if (CHANNEL or GROUP) and (not await is_joined(client, user_id)):
-        await message.reply_text("Kamu wajib join dulu.", reply_markup=join_keyboard())
-        return
-
-    await message.reply_text("pong ✅")
-
-
-app.run()
+print("Bot aktif...")
+app.run_polling()
