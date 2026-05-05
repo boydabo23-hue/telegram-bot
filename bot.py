@@ -6,7 +6,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandle
 
 TOKEN = os.getenv("TOKEN")
 
-CHANNEL = "@NutrisiViral18"
+CHANNEL = "@ThisIsVero"
 GROUP = "@bpoindo"
 
 USERNAME_BOT = "veronicasexbot"
