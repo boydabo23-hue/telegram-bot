@@ -4,7 +4,7 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 API_ID = int(os.getenv("API_ID"))
 API_HASH = os.getenv("API_HASH")
-BOT_TOKEN = os.getenv("8577228984:AAH8pi61W5pp7LEQiM9hiPHfogQotXbqzUo")
+bot_token = os.environ["BOT_TOKEN"]
 
 CHANNEL = os.getenv("@NutrisiViral18")  # tanpa @
 GROUP = os.getenv("@bpoindo")      # tanpa @
