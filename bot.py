@@ -60,7 +60,7 @@ async def kirim_video(chat_id, video, context):
         await context.bot.send_video(
             chat_id=chat_id,
             video=open(video, "rb"),
-            caption="🔥 Nih videonya bro 😏"
+            caption="🔥 Nih videonya bubb💦"
         )
     except:
         await context.bot.send_message(chat_id, "❌ Video tidak ditemukan")
@@ -124,7 +124,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                     await kirim_video(user_id, v, context)
 
-                    await context.bot.send_message(user_id, "🔥 Enjoy bro 😏")
+                    await context.bot.send_message(user_id, "🔥 Enjoy sayangg 😏")
 
                     return
 
