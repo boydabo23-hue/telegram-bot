@@ -1,6 +1,7 @@
 import os
 import random
 import string
+import asyncio
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
@@ -74,6 +75,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     kode = args[0] if args else None
 
+    # =========================
+    # CEK JOIN
+    # =========================
     if not await cek_join(user_id, context.bot):
         keyboard = [
             [
@@ -95,7 +99,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    # kalau ada kode dari link
+    # =========================
+    # JIKA ADA KODE LINK
+    # =========================
     if kode:
         try:
             with open("links.txt", "r") as f:
@@ -104,7 +110,22 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             for line in data:
                 k, v = line.strip().split("|")
                 if k == kode:
+
+                    # 🔥 EFFECT LOADING
+                    await context.bot.send_chat_action(chat_id=user_id, action="typing")
+                    await context.bot.send_message(user_id, "🔍 Mengecek akses...")
+                    await asyncio.sleep(1)
+
+                    await context.bot.send_message(user_id, "📦 Menyiapkan file...")
+                    await asyncio.sleep(1)
+
+                    await context.bot.send_message(user_id, "🚀 Mengirim video...")
+                    await asyncio.sleep(1)
+
                     await kirim_video(user_id, v, context)
+
+                    await context.bot.send_message(user_id, "🔥 Enjoy bro 😏")
+
                     return
 
             await update.message.reply_text("❌ Link tidak valid")
