@@ -25,7 +25,7 @@ SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 CHANNEL = "@ThisIsVero"
-GROUP = "@veyyooo"
+GROUP = "@bpoindo"
 
 USERNAME_BOT = "bitchhubofficialBot"
 
@@ -128,6 +128,51 @@ async def save_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 # =========================
+# BROADCAST
+# =========================
+
+async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    user_id = update.effective_user.id
+
+    # ADMIN ONLY
+    if user_id != ADMIN_ID:
+        return
+
+    # CEK PESAN
+    if not context.args:
+        await update.message.reply_text(
+            "Contoh:\n/broadcast Halo semuanya 😎"
+        )
+        return
+
+    pesan = " ".join(context.args)
+
+    users = supabase.table("users") \
+        .select("*") \
+        .execute()
+
+    total = 0
+
+    for user in users.data:
+
+        try:
+
+            await context.bot.send_message(
+                chat_id=user["user_id"],
+                text=pesan
+            )
+
+            total += 1
+
+        except:
+            pass
+
+    await update.message.reply_text(
+        f"✅ Broadcast terkirim ke {total} user"
+    )
+
+# =========================
 # START
 # =========================
 
@@ -135,6 +180,23 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_id = update.effective_user.id
     nama = update.effective_user.first_name
+
+    # SAVE USER
+    try:
+
+        cek_user = supabase.table("users") \
+            .select("*") \
+            .eq("user_id", user_id) \
+            .execute()
+
+        if not cek_user.data:
+
+            supabase.table("users").insert({
+                "user_id": user_id
+            }).execute()
+
+    except:
+        pass
 
     args = context.args
     kode = args[0] if args else None
@@ -265,6 +327,10 @@ app = ApplicationBuilder().token(TOKEN).build()
 
 app.add_handler(
     CommandHandler("start", start)
+)
+
+app.add_handler(
+    CommandHandler("broadcast", broadcast)
 )
 
 app.add_handler(
