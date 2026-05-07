@@ -3,10 +3,13 @@ import random
 import string
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
     CallbackQueryHandler,
+    MessageHandler,
+    filters,
     ContextTypes
 )
 
@@ -33,79 +36,84 @@ if not TOKEN:
 # CONNECT SUPABASE
 # =========================
 
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+supabase = create_client(
+    SUPABASE_URL,
+    SUPABASE_KEY
+)
 
 # =========================
-# GENERATE KODE
+# GENERATE RANDOM CODE
 # =========================
 
 def generate_kode(length=8):
-    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+    return ''.join(
+        random.choices(
+            string.ascii_letters + string.digits,
+            k=length
+        )
+    )
 
 # =========================
-# CEK JOIN
+# CHECK JOIN
 # =========================
 
 async def cek_join(user_id, bot):
+
     try:
-        ch = await bot.get_chat_member(CHANNEL, user_id)
-        gr = await bot.get_chat_member(GROUP, user_id)
+
+        ch = await bot.get_chat_member(
+            CHANNEL,
+            user_id
+        )
+
+        gr = await bot.get_chat_member(
+            GROUP,
+            user_id
+        )
 
         return (
-            ch.status in ["member", "administrator", "creator"]
+            ch.status in [
+                "member",
+                "administrator",
+                "creator"
+            ]
             and
-            gr.status in ["member", "administrator", "creator"]
+            gr.status in [
+                "member",
+                "administrator",
+                "creator"
+            ]
         )
 
     except:
         return False
 
 # =========================
-# BUAT LINK
+# AUTO SAVE VIDEO
 # =========================
 
-async def buatlink(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def save_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
-    if not context.args:
-        await update.message.reply_text(
-            "Contoh:\n/buatlink video1.mp4"
-        )
+    video = update.message.video
+
+    if not video:
         return
 
-    nama_video = context.args[0]
+    file_id = video.file_id
 
     kode = generate_kode()
 
-    # simpan ke database
+    # save database
     supabase.table("links").insert({
         "kode": kode,
-        "video": nama_video
+        "file_id": file_id
     }).execute()
 
     link = f"https://t.me/{USERNAME_BOT}?start={kode}"
 
     await update.message.reply_text(
-        f"🔗 Link berhasil dibuat:\n\n{link}"
+        f"✅ Video berhasil disimpan!\n\n🔗 {link}"
     )
-
-# =========================
-# KIRIM VIDEO
-# =========================
-
-async def kirim_video(chat_id, video, context):
-
-    try:
-        await context.bot.send_video(
-            chat_id=chat_id,
-            video=open(video, "rb"),
-            caption="🔥 Nih videonya bro 😏"
-        )
-
-    except:
-        await context.bot.send_message(
-            chat_id,
-            "❌ Video tidak ditemukan"
-        )
 
 # =========================
 # START
@@ -120,7 +128,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     kode = args[0] if args else None
 
     # =====================
-    # CEK JOIN
+    # CHECK JOIN
     # =====================
 
     if not await cek_join(user_id, context.bot):
@@ -128,13 +136,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard = [
             [
                 InlineKeyboardButton(
-                    "Join Dulu",
+                    "📢 Join Channel",
                     url=f"https://t.me/{CHANNEL.replace('@','')}"
                 )
             ],
             [
                 InlineKeyboardButton(
-                    "Join Dulu",
+                    "👥 Join Group",
                     url=f"https://t.me/{GROUP.replace('@','')}"
                 )
             ],
@@ -157,7 +165,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     # =====================
-    # CEK LINK DATABASE
+    # GET VIDEO FROM DB
     # =====================
 
     if kode:
@@ -171,31 +179,59 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             if data.data:
 
-                video = data.data[0]["video"]
+                file_id = data.data[0]["file_id"]
 
-                await kirim_video(
+                await context.bot.send_chat_action(
+                    chat_id=user_id,
+                    action="upload_video"
+                )
+
+                await context.bot.send_message(
                     user_id,
-                    video,
-                    context
+                    "🔍 Mengecek akses..."
+                )
+
+                await context.bot.send_message(
+                    user_id,
+                    "📦 Menyiapkan video..."
+                )
+
+                await context.bot.send_message(
+                    user_id,
+                    "🚀 Mengirim video..."
+                )
+
+                await context.bot.send_video(
+                    chat_id=user_id,
+                    video=file_id,
+                    caption="🔥 Nih videonya bro 😏"
+                )
+
+                await context.bot.send_message(
+                    user_id,
+                    "✅ Enjoy bro 😎"
                 )
 
             else:
+
                 await update.message.reply_text(
                     "❌ Link tidak valid"
                 )
 
         except Exception as e:
+
             await update.message.reply_text(
                 f"❌ Error:\n{e}"
             )
 
     else:
+
         await update.message.reply_text(
-            "Welcome bro 😎"
+            "🔥 Welcome bro 😎"
         )
 
 # =========================
-# TOMBOL CEK
+# BUTTON CHECK
 # =========================
 
 async def tombol(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -225,9 +261,17 @@ async def tombol(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 app = ApplicationBuilder().token(TOKEN).build()
 
-app.add_handler(CommandHandler("start", start))
-app.add_handler(CommandHandler("buatlink", buatlink))
-app.add_handler(CallbackQueryHandler(tombol))
+app.add_handler(
+    CommandHandler("start", start)
+)
+
+app.add_handler(
+    CallbackQueryHandler(tombol)
+)
+
+app.add_handler(
+    MessageHandler(filters.VIDEO, save_video)
+)
 
 print("Bot aktif...")
 app.run_polling()
