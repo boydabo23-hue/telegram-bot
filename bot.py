@@ -210,7 +210,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await context.bot.send_video(
                     chat_id=user_id,
                     video=file_id,
-                    caption="🔥 Nih videonya bro 😏",
+                    caption="🔥 Nih videonya bubb💦",
                     protect_content=True
                 )
 
