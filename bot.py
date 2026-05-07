@@ -203,25 +203,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     "🔍 Mengecek akses..."
                 )
 
-                await context.bot.send_message(
-                    user_id,
-                    "📦 Menyiapkan video..."
-                )
-
-                await context.bot.send_message(
-                    user_id,
-                    "🚀 Mengirim video..."
-                )
+                # =====================
+                # SEND PROTECTED VIDEO
+                # =====================
 
                 await context.bot.send_video(
                     chat_id=user_id,
                     video=file_id,
-                    caption="🔥 Nih videonya bro 😏"
-                )
-
-                await context.bot.send_message(
-                    user_id,
-                    "✅ Enjoy bro 😎"
+                    caption="🔥 Nih videonya bro 😏",
+                    protect_content=True
                 )
 
             else:
