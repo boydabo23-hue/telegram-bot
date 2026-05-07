@@ -27,7 +27,7 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 CHANNEL = "@ThisIsVero"
 GROUP = "@bpoindo"
 
-USERNAME_BOT = "veronicasexbot"
+USERNAME_BOT = "bitchhubofficialBot"
 
 # ID TELEGRAM KAMU
 ADMIN_ID = 6818059423
