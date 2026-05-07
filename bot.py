@@ -25,7 +25,7 @@ SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 CHANNEL = "@ThisIsVero"
-GROUP = "@bpoindo"
+GROUP = "@veyyooo"
 
 USERNAME_BOT = "bitchhubofficialBot"
 
