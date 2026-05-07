@@ -29,6 +29,9 @@ GROUP = "@bpoindo"
 
 USERNAME_BOT = "veronicasexbot"
 
+# ID TELEGRAM KAMU
+ADMIN_ID = 6818059423
+
 if not TOKEN:
     raise ValueError("TOKEN tidak ditemukan!")
 
@@ -94,6 +97,15 @@ async def cek_join(user_id, bot):
 
 async def save_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
+    # CEK ADMIN
+    user_id = update.effective_user.id
+
+    if user_id != ADMIN_ID:
+        await update.message.reply_text(
+            "❌ Kamu tidak punya akses upload"
+        )
+        return
+
     video = update.message.video
 
     if not video:
@@ -103,7 +115,7 @@ async def save_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     kode = generate_kode()
 
-    # save database
+    # SAVE DATABASE
     supabase.table("links").insert({
         "kode": kode,
         "file_id": file_id
