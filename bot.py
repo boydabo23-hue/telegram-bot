@@ -31,7 +31,7 @@ USERNAME_BOT = "bitchhubofficialBot"
 # MULTI ADMIN
 ADMIN_IDS = [
     6818059423,
-    123456789
+    7088892275
 ]
 
 if not TOKEN:
