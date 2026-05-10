@@ -5,7 +5,7 @@ import string
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
     ApplicationBuilder,
-   CommandHandler,
+    CommandHandler,
     CallbackQueryHandler,
     MessageHandler,
     filters,
@@ -28,7 +28,11 @@ GROUP = "@mediaveroh"
 
 USERNAME_BOT = "bitchhubofficialBot"
 
-ADMIN_ID = 6818059423
+# MULTI ADMIN
+ADMIN_IDS = [
+    6818059423,
+    123456789
+]
 
 if not TOKEN:
     raise ValueError("TOKEN tidak ditemukan!")
@@ -171,6 +175,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 file_id = data.data[0]["file_id"]
 
+                await context.bot.send_chat_action(
+                    chat_id=user_id,
+                    action="upload_video"
+                )
+
                 await context.bot.send_message(
                     user_id,
                     "🔍 Mengecek akses..."
@@ -179,7 +188,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await context.bot.send_video(
                     chat_id=user_id,
                     video=file_id,
-                    caption="🔥 done",
+                    caption="🔥 Nih videonya",
                     protect_content=True
                 )
 
@@ -198,7 +207,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
 
         await update.message.reply_text(
-            "🔥 SELAMAT DATANG KEMBALI DIASUPAN VERO"
+            "🔥 Welcome bro 😎"
         )
 
 # =========================
@@ -210,7 +219,7 @@ async def save_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # CEK ADMIN
     user_id = update.effective_user.id
 
-    if user_id != ADMIN_ID:
+    if user_id not in ADMIN_IDS:
 
         await update.message.reply_text(
             "❌ Kamu tidak punya akses upload"
@@ -248,56 +257,105 @@ async def save_video(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 # =========================
-# BROADCAST
+# BROADCAST FOTO + TEXT
 # =========================
 
 async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
-    # CEK ADMIN
-    if update.effective_user.id != ADMIN_ID:
+    # ADMIN ONLY
+    if update.effective_user.id not in ADMIN_IDS:
         return
 
-    # CEK PESAN
-    if not context.args:
-
-        await update.message.reply_text(
-            "Contoh:\n/broadcast Halo semuanya 😎"
-        )
-
-        return
-
-    # AMBIL ISI PESAN
-    pesan = update.message.text.replace(
-        "/broadcast ",
-        ""
+    # LOADING
+    await context.bot.send_chat_action(
+        chat_id=update.effective_chat.id,
+        action="typing"
     )
 
-    # AMBIL USER
+    msg = await update.message.reply_text(
+        "📡 Memulai broadcast..."
+    )
+
     users = supabase.table("users") \
         .select("*") \
         .execute()
 
     total = 0
+    gagal = 0
 
-    # KIRIM KE SEMUA USER
-    for user in users.data:
+    # =====================
+    # FOTO + CAPTION
+    # =====================
 
-        try:
+    if update.message.photo:
 
-            await context.bot.send_message(
-                chat_id=user["id"],
-                text=pesan
+        photo = update.message.photo[-1].file_id
+
+        caption = update.message.caption or ""
+
+        caption = caption.replace(
+            "/broadcast",
+            ""
+        ).strip()
+
+        for user in users.data:
+
+            try:
+
+                await context.bot.send_photo(
+                    chat_id=user["id"],
+                    photo=photo,
+                    caption=caption
+                )
+
+                total += 1
+
+            except:
+
+                gagal += 1
+
+    # =====================
+    # TEXT
+    # =====================
+
+    else:
+
+        if not context.args:
+
+            await msg.edit_text(
+                "❌ Contoh:\n/broadcast Halo semuanya 😎"
             )
 
-            total += 1
+            return
 
-        except:
+        pesan = update.message.text.replace(
+            "/broadcast",
+            ""
+        ).strip()
 
-            pass
+        for user in users.data:
 
-    # HASIL
-    await update.message.reply_text(
-        f"✅ Broadcast terkirim ke {total} user"
+            try:
+
+                await context.bot.send_message(
+                    chat_id=user["id"],
+                    text=pesan
+                )
+
+                total += 1
+
+            except:
+
+                gagal += 1
+
+    # =====================
+    # DONE
+    # =====================
+
+    await msg.edit_text(
+        f"✅ Broadcast selesai!\n\n"
+        f"👥 Berhasil: {total}\n"
+        f"❌ Gagal: {gagal}"
     )
 
 # =========================
@@ -315,7 +373,7 @@ async def tombol(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if await cek_join(user_id, context.bot):
 
         await query.edit_message_text(
-            "✅ Sudah join, silahkan klik ulang di link ch😎"
+            "✅ Sudah join, silakan kirim ulang link 😎"
         )
 
     else:
