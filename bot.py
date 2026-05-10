@@ -138,7 +138,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ],
             [
                 InlineKeyboardButton(
-                    "👥 Join Group",
+                    "👥 Join channel",
                     url=f"https://t.me/{GROUP.replace('@','')}"
                 )
             ],
@@ -373,7 +373,7 @@ async def tombol(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if await cek_join(user_id, context.bot):
 
         await query.edit_message_text(
-            "✅ Sudah join, silakan kirim ulang link 😎"
+            "✅ Sudah join, silakan kirim klik ulang link di channel"
         )
 
     else:
