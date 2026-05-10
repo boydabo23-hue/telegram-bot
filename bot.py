@@ -188,7 +188,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await context.bot.send_video(
                     chat_id=user_id,
                     video=file_id,
-                    caption="🔥 Nih videonya",
+                    caption="🔥 DONE",
                     protect_content=True
                 )
 
@@ -207,7 +207,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
 
         await update.message.reply_text(
-            "🔥 Welcome bro 😎"
+            "selamat datang kembali di asupan vero"
         )
 
 # =========================
