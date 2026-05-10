@@ -179,7 +179,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await context.bot.send_video(
                     chat_id=user_id,
                     video=file_id,
-                    caption="🔥 Nih videonya",
+                    caption="🔥 done",
                     protect_content=True
                 )
 
@@ -198,7 +198,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
 
         await update.message.reply_text(
-            "🔥 Welcome bro 😎"
+            "🔥 SELAMAT DATANG KEMBALI DIASUPAN VERO"
         )
 
 # =========================
@@ -315,7 +315,7 @@ async def tombol(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if await cek_join(user_id, context.bot):
 
         await query.edit_message_text(
-            "✅ Sudah join, silakan kirim ulang link 😎"
+            "✅ Sudah join, silahkan klik ulang di link ch😎"
         )
 
     else:
