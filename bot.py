@@ -93,7 +93,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         keyboard = [
             [InlineKeyboardButton("📢 Join Channel", url=f"https://t.me/{CHANNEL.replace('@','')}")],
-            [InlineKeyboardButton("👥 Join Group", url=f"https://t.me/{GROUP.replace('@','')}")],
+            [InlineKeyboardButton("👥 Join Channel ", url=f"https://t.me/{GROUP.replace('@','')}")],
             [InlineKeyboardButton("🔄 Coba Lagi", callback_data="cek")]
         ]
 
@@ -122,7 +122,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await context.bot.send_video(
                     chat_id=user_id,
                     video=file_id,
-                    caption="🔥 Nih videonya",
+                    caption="🔥 done",
                     protect_content=True
                 )
             else:
@@ -178,7 +178,7 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Contoh: /broadcast Halo semuanya 😎")
         return
 
-    pesan = " ".join(context.args)
+   pesan = update.message.text.replace("/broadcast ", "")
 
     users = supabase.table("users").select("*").execute()
 
