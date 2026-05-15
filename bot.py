@@ -373,7 +373,7 @@ async def tombol(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if await cek_join(user_id, context.bot):
 
         await query.edit_message_text(
-            "✅ Sudah join, silakan kirim klik ulang link di channel"
+            "✅ Sudah join, silakan kirim klik ulang link di channel https://t.me/ThisIsVero"
         )
 
     else:
