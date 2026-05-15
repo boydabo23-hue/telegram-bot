@@ -207,7 +207,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
 
         await update.message.reply_text(
-            "selamat datang kembali di asupan vero"
+            "selamat datang kembali di asupan vero link asupan https://t.me/ThisIsVero"
         )
 
 # =========================
